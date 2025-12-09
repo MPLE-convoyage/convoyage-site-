@@ -1,0 +1,127 @@
+// server.js
+import express from 'express';
+import nodemailer from 'nodemailer';
+
+const app = express();
+app.use(express.json());
+app.use(express.static('public')); // sert index.html
+
+// Transporteur email avec Gmail (via variables Render)
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: process.env.SMTP_PORT || 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER, // ton adresse Gmail
+    pass: process.env.SMTP_PASS  // mot de passe d'application Gmail
+  }
+});
+
+// --- Tarifs au km (péages inclus en moyenne) ---
+function computePrice(payload, distanceKm) {
+  const vt = payload.vehicleType;
+  const isPL = vt === 'poidsLourd' || vt === 'poidsLourdPlus';
+
+  let fixed = isPL ? 50 : 35;
+  let perKm = 1.10;
+
+  if (vt === 'utilitaire') perKm = 1.25;
+  else if (vt === 'moto') perKm = 0.90;
+  else if (vt === 'prestige') perKm = 1.45;
+  else if (vt === 'poidsLourd') perKm = 1.85;
+  else if (vt === 'poidsLourdPlus') perKm = 2.05;
+
+  let total = fixed + distanceKm * perKm;
+
+  if (payload.options?.fuel) total += distanceKm * (isPL ? 0.20 : 0.10);
+  if (payload.options?.weekend) total *= isPL ? 1.20 : 1.15;
+
+  const threshold = isPL ? 500 : 400;
+  const discountMult = isPL ? 0.90 : 0.95;
+  if (distanceKm > threshold) total *= discountMult;
+
+  return Math.round(total * 100) / 100;
+}
+
+// Distance simulée (à remplacer plus tard par une vraie API)
+async function getDistance(from, to) {
+  const sameDept = /(\d{5})/.test(from) && /(\d{5})/.test(to) && from.slice(0,2) === to.slice(0,2);
+  return sameDept ? 120 : 350;
+}
+
+function validatePayload(p) {
+  const errors = [];
+  if (!p.from || !p.to) errors.push('Adresse départ/arrivée manquante.');
+  if (!p.vehicleType) errors.push('Type de véhicule manquant.');
+  if (!p.email) errors.push('Email manquant.');
+  const allowed = ['citadine','berline','utilitaire','moto','prestige','poidsLourd','poidsLourdPlus'];
+  if (!allowed.includes(p.vehicleType)) errors.push('Type de véhicule non reconnu.');
+  return errors;
+}
+
+app.post('/api/quote', async (req, res) => {
+  try {
+    const p = req.body;
+    const errors = validatePayload(p);
+    if (errors.length) return res.status(400).json({ message: errors.join(' ') });
+
+    const distanceKm = await getDistance(p.from, p.to);
+    const price = computePrice(p, distanceKm);
+
+    const vehLabel = {
+      citadine: 'Citadine',
+      berline: 'Berline',
+      utilitaire: 'Utilitaire',
+      moto: 'Moto',
+      prestige: 'Prestige',
+      poidsLourd: 'Poids lourd ≤ 19t',
+      poidsLourdPlus: 'Poids lourd > 19t'
+    }[p.vehicleType];
+
+    const optionsText = `
+      Carburant inclus: ${p.options?.fuel ? 'Oui' : 'Non'} |
+      Week-end: ${p.options?.weekend ? 'Oui' : 'Non'}
+    `.replace(/\s+/g, ' ').trim();
+
+    const htmlClient = `
+      <h2>Votre devis – Convoyage de véhicule</h2>
+      <p><strong>Trajet:</strong> ${p.from} → ${p.to} (${distanceKm} km estimés)</p>
+      <p><strong>Type:</strong> ${vehLabel}</p>
+      <p><strong>Date:</strong> ${p.date || '—'}</p>
+      <p><strong>Valeur estimée:</strong> ${p.value ? p.value + ' €' : '—'}</p>
+      <p><strong>Options:</strong> ${optionsText}</p>
+      <p><strong>Commentaires:</strong> ${p.notes || '—'}</p>
+      <p style="font-size:1.2rem;"><strong>Total TTC:</strong> ${price} €</p>
+      <hr />
+      <p>Ce devis utilise un tarif au kilomètre incluant en moyenne les péages.</p>
+    `;
+
+    const htmlAdmin = `
+      <h2>Nouvelle demande de devis</h2>
+      <p><strong>Client:</strong> ${p.name || '—'} (${p.email}, ${p.phone || '—'})</p>
+      ${htmlClient}
+    `;
+
+    await transporter.sendMail({
+      from: 'Convoyage <' + process.env.SMTP_USER + '>',
+      to: p.email,
+      subject: 'Votre devis de convoyage',
+      html: htmlClient
+    });
+
+    await transporter.sendMail({
+      from: 'Convoyage <' + process.env.SMTP_USER + '>',
+      to: process.env.SMTP_USER,
+      subject: 'Nouvelle demande de devis',
+      html: htmlAdmin
+    });
+
+    res.json({ message: 'Devis envoyé par email. Merci !', price, distanceKm, vehicleLabel: vehLabel });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'Erreur serveur lors de l’envoi du devis.' });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`API en écoute sur http://localhost:${PORT}`));

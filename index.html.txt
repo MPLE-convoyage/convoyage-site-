@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Convoyage de véhicules – Devis en ligne</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; background:#f7f7fb; color:#222; }
+    header { background:#0d1b2a; color:#fff; padding:20px; }
+    header h1 { margin:0; }
+    main { max-width:900px; margin:32px auto; padding:0 16px; }
+    .card { background:#fff; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.08); padding:24px; margin-bottom:24px; }
+    label { display:block; margin:10px 0 6px; font-weight:600; }
+    input, select, textarea { width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .total { font-size:1.4rem; font-weight:700; color:#0d1b2a; margin-top:12px; }
+    button { background:#1b263b; color:#fff; border:none; padding:12px 16px; border-radius:10px; cursor:pointer; }
+    button:disabled { opacity:.6; cursor:not-allowed; }
+    footer { text-align:center; color:#666; padding:24px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Convoyage de véhicules</h1>
+    <p>Devis instantané et confirmation par email.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Demande de devis</h2>
+      <form id="quoteForm">
+        <div class="row">
+          <div>
+            <label>Adresse de départ</label>
+            <input type="text" id="from" required placeholder="Ex: 17000 La Rochelle" />
+          </div>
+          <div>
+            <label>Adresse d'arrivée</label>
+            <input type="text" id="to" required placeholder="Ex: 17100 Saintes" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Type de véhicule</label>
+            <select id="vehicleType" required>
+              <option value="citadine">Citadine</option>
+              <option value="berline">Berline</option>
+              <option value="utilitaire">Utilitaire</option>
+              <option value="moto">Moto</option>
+              <option value="prestige">Prestige</option>
+              <option value="poidsLourd">Poids lourd ≤ 19t</option>
+              <option value="poidsLourdPlus">Poids lourd > 19t</option>
+            </select>
+          </div>
+          <div>
+            <label>Date souhaitée</label>
+            <input type="date" id="date" required />
+          </div>
+        </div>
+
+        <label>Valeur estimée du véhicule (€)</label>
+        <input type="number" id="value" min="0" step="100" placeholder="Ex: 25000" />
+
+        <div class="row">
+          <div>
+            <label><input type="checkbox" id="fuel" /> Carburant inclus</label>
+            <label><input type="checkbox" id="weekend" /> Convoyage week‑end</label>
+          </div>
+          <div>
+            <label>Commentaires</label>
+            <textarea id="notes" rows="4" placeholder="Précisions (hauteur, contraintes, horaires...)"></textarea>
+          </div>
+        </div>
+
+        <div class="total">Total estimé: <span id="total">—</span> € TTC</div>
+        <div style="margin-top:16px;">
+          <label>Nom</label>
+          <input type="text" id="name" required />
+          <label>Email</label>
+          <input type="email" id="email" required />
+          <label>Téléphone</label>
+          <input type="tel" id="phone" />
+        </div>
+
+        <p style="font-size:.9rem;color:#555;">En envoyant, vous acceptez nos <a href="#">CGV</a> et la <a href="#">politique de confidentialité</a>.</p>
+        <button type="submit">Envoyer le devis par email</button>
+      </form>
+      <p id="status" aria-live="polite" style="margin-top:10px;"></p>
+    </section>
+  </main>
+
+  <footer>© 2025 Convoyage – Mentions légales – Tous droits réservés</footer>
+
+  <script>
+    async function estimateDistance(from, to) {
+      // Simulation simple: même département ~120 km, sinon ~350 km
+      const sameDept = /17\\d{3}/.test(from) && /17\\d{3}/.test(to);
+      return sameDept ? 120 : 350;
+    }
+
+    function pricing(distance, vehicleType, options) {
+      let perKm = 1.10; let fixed = 35;
+      if (vehicleType === 'utilitaire') perKm = 1.25;
+      if (vehicleType === 'prestige') perKm = 1.45;
+      if (vehicleType === 'moto') perKm = 0.90;
+      if (vehicleType === 'poidsLourd') { perKm = 1.85; fixed = 50; }
+      if (vehicleType === 'poidsLourdPlus') { perKm = 2.05; fixed = 50; }
+
+      let total = fixed + distance * perKm;
+      if (options.fuel) total += distance * (vehicleType.includes('poidsLourd') ? 0.20 : 0.10);
+      if (options.weekend) total *= (vehicleType.includes('poidsLourd') ? 1.20 : 1.15);
+      if (distance > (vehicleType.includes('poidsLourd') ? 500 : 400)) {
+        total *= (vehicleType.includes('poidsLourd') ? 0.90 : 0.95);
+      }
+      return Math.round(total * 100) / 100;
+    }
+
+    const form = document.getElementById('quoteForm');
+    const totalEl = document.getElementById('total');
+    const statusEl = document.getElementById('status');
+
+    async function updateEstimate() {
+      const from = document.getElementById('from').value.trim();
+      const to = document.getElementById('to').value.trim();
+      const vehicleType = document.getElementById('vehicleType').value;
+      const options = {
+        fuel: document.getElementById('fuel').checked,
+        weekend: document.getElementById('weekend').checked
+      };
+      if (from && to) {
+        const distance = await estimateDistance(from, to);
+        const total = pricing(distance, vehicleType, options);
+        totalEl.textContent = total.toFixed(2);
+      } else {
+        totalEl.textContent = '—';
+      }
+    }
+
+    form.addEventListener('input', updateEstimate);
+    form.addEventListener('change', updateEstimate);
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusEl.textContent = 'Envoi en cours...';
+      const payload = {
+        from: document.getElementById('from').value.trim(),
+        to: document.getElementById('to').value.trim(),
+        vehicleType: document.getElementById('vehicleType').value,
+        date: document.getElementById('date').value,
+        value: document.getElementById('value').value,
+        options: {
+          fuel: document.getElementById('fuel').checked,
+          weekend: document.getElementById('weekend').checked
+        },
+        notes: document.getElementById('notes').value,
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value
+      };
+      try {
+        const res = await fetch('/api/quote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        statusEl.textContent = data.message || 'Devis envoyé ! Vérifiez votre boîte mail.';
+      } catch (err) {
+        statusEl.textContent = 'Échec de l’envoi. Réessayez plus tard.';
+      }
+    });
+
+    updateEstimate();
+  </script>
+</body>
+</html>
