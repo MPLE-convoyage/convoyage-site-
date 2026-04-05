@@ -1275,7 +1275,7 @@ function calculate() {
   document.getElementById('sim-breakdown').innerHTML = `
     <div class="sim-line"><span>${label} × ${km} km</span><span>${base.toFixed(2)} €</span></div>
     <div class="sim-line"><span>Frais de route (28%)</span><span>+ ${routeCost.toFixed(2)} €</span></div>
-    ${hasFerry ? `<div class="sim-line" style="color:#60a5fa"><span>⛴ Frais divers — traversée ferry (+20%)</span><span>+ ${ferryCost.toFixed(2)} €</span></div>` : ''}
+    ${hasFerry ? `<div class="sim-line" style="color:#60a5fa"><span>⛴ Frais divers — traversée ferry</span><span>+ ${ferryCost.toFixed(2)} €</span></div>` : ''}
     ${minApplied ? `<div class="sim-line" style="color:var(--accent)"><span>Minimum de facturation appliqué</span><span>—</span></div>` : ''}
     <div class="sim-line total"><span>Total estimé TTC</span><span><span class="sim-total-amount">${total.toFixed(2)} €</span></span></div>
   `;
@@ -1346,7 +1346,7 @@ function submitDevis() {
     <div class="quote-line"><span>Distance</span><span>${km} km</span></div>
     <div class="quote-line"><span>Convoyage (${type === 'vl' ? '0,98' : '2,20'} €/km)</span><span>${base.toFixed(2)} €</span></div>
     <div class="quote-line"><span>Frais de route (28%)</span><span>+ ${routeCost.toFixed(2)} €</span></div>
-    ${hasFerry ? `<div class="quote-line" style="color:#60a5fa"><span>⛴ Frais divers — ferry (+20%)</span><span>+ ${ferryCost.toFixed(2)} €</span></div>` : ''}
+    ${hasFerry ? `<div class="quote-line" style="color:#60a5fa"><span>⛴ Frais divers — ferry</span><span>+ ${ferryCost.toFixed(2)} €</span></div>` : ''}
     ${minApplied ? `<div class="quote-line" style="color:var(--accent)"><span>Min. facturation appliqué</span><span>—</span></div>` : ''}
     <div class="quote-line total"><span>Total TTC</span><span><span class="quote-total-num">${total.toFixed(2)} €</span></span></div>
   `;
