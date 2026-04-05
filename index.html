@@ -914,7 +914,7 @@
       <div class="contact-item">
         <span>✉️</span>
         <div><div style="font-size:12px;color:var(--muted);margin-bottom:2px;">Email</div>
-        <a href="/cdn-cgi/l/email-protection#bcd1d5dfd7ddd9d0ccd0d98c8a8afcdbd1ddd5d092dfd3d1"><span class="__cf_email__" data-cfemail="04696d676f656168746861343232446369656d682a676b69">[email&#160;protected]</span></a></div>
+        <a id="email-link" href="#" style="color:var(--white);text-decoration:none;"></a></div>
       </div>
       <div class="contact-item">
         <span>⏰</span>
@@ -1140,17 +1140,51 @@ function calculateConducteur() {
   openModal();
 }
 
+// ── EMAIL VISIBLE ──
+(function() {
+  const u = 'mickaelple066';
+  const d = 'gmail.com';
+  const el = document.getElementById('email-link');
+  if (el) { el.href = 'mailto:' + u + '@' + d; el.textContent = u + '@' + d; }
+})();
+
 // ── TARIFS ──
 const RATES = { vl: 0.98, pl: 2.20 };
-const RETURN_RATIO = 0.24;
+const RETURN_RATIO = 0.28;
+const FERRY_RATIO = 0.20;
 const MIN_AMOUNT = 90;
 
-function computePrice(type, km) {
+// Destinations nécessitant un ferry depuis la France continentale
+const FERRY_DESTINATIONS = [
+  'corse', 'corsica', 'ajaccio', 'bastia', 'porto-vecchio', 'calvi', 'propriano', 'ile rousse', 'bonifacio',
+  'sardaigne', 'sardinia', 'cagliari',
+  'majorque', 'mallorca', 'ibiza', 'minorque',
+  'belle-ile', 'île de ré', 'ile de re', 'île d\'oléron', 'ile d\'oleron', 'île de noirmoutier',
+  'île d\'yeu', 'groix', 'ouessant', 'molène',
+  'jersey', 'guernesey', 'guernsey',
+  'angleterre', 'england', 'royaume-uni', 'uk', 'douvres', 'dover',
+  'irlande', 'ireland',
+  'maroc', 'morocco', 'tanger', 'casablanca',
+  'tunisie', 'tunisia', 'tunis',
+  'algerie', 'algeria', 'alger'
+];
+
+function detectFerry(dep, arr) {
+  const text = (dep + ' ' + arr).toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return FERRY_DESTINATIONS.some(dest => {
+    const d = dest.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return text.includes(d);
+  });
+}
+
+function computePrice(type, km, hasFerry = false) {
   const base = km * RATES[type];
-  const returnCost = base * RETURN_RATIO;
-  const subtotal = base + returnCost;
+  const routeCost = base * RETURN_RATIO;
+  const ferryCost = hasFerry ? base * FERRY_RATIO : 0;
+  const subtotal = base + routeCost + ferryCost;
   const total = Math.max(subtotal, MIN_AMOUNT);
-  return { base, returnCost, subtotal, total };
+  return { base, routeCost, ferryCost, subtotal, total };
 }
 
 // ── GOOGLE MAPS ──
@@ -1224,13 +1258,15 @@ function calculate() {
   const type = document.getElementById('sim-type').value;
   const km = parseFloat(document.getElementById('sim-km').value);
   if (!km || km <= 0) { notify('Veuillez entrer une distance valide.', 'error'); return; }
-  const { base, returnCost, total } = computePrice(type, km);
-  const label = type === 'vl' ? 'Véhicule Léger (0,98 €/km)' : 'PL / SPL (2,20 €/km)';
-  const minApplied = (base + returnCost) < MIN_AMOUNT;
 
-  // Copier les villes dans le formulaire de devis
   const dep = document.getElementById('sim-dep').value.trim();
   const arr = document.getElementById('sim-arr').value.trim();
+  const hasFerry = detectFerry(dep, arr);
+
+  const { base, routeCost, ferryCost, total } = computePrice(type, km, hasFerry);
+  const label = type === 'vl' ? 'Véhicule Léger (0,98 €/km)' : 'PL / SPL (2,20 €/km)';
+  const minApplied = (base + routeCost + ferryCost) < MIN_AMOUNT;
+
   if (dep) document.getElementById('f-dep').value = dep;
   if (arr) document.getElementById('f-arr').value = arr;
   if (km) document.getElementById('f-km').value = km;
@@ -1238,7 +1274,8 @@ function calculate() {
 
   document.getElementById('sim-breakdown').innerHTML = `
     <div class="sim-line"><span>${label} × ${km} km</span><span>${base.toFixed(2)} €</span></div>
-    <div class="sim-line"><span>Retour transport en commun (24%)</span><span>+ ${returnCost.toFixed(2)} €</span></div>
+    <div class="sim-line"><span>Frais de route (28%)</span><span>+ ${routeCost.toFixed(2)} €</span></div>
+    ${hasFerry ? `<div class="sim-line" style="color:#60a5fa"><span>⛴ Frais divers — traversée ferry (+20%)</span><span>+ ${ferryCost.toFixed(2)} €</span></div>` : ''}
     ${minApplied ? `<div class="sim-line" style="color:var(--accent)"><span>Minimum de facturation appliqué</span><span>—</span></div>` : ''}
     <div class="sim-line total"><span>Total estimé TTC</span><span><span class="sim-total-amount">${total.toFixed(2)} €</span></span></div>
   `;
@@ -1294,11 +1331,12 @@ function submitDevis() {
   }
 
   // Avec distance → modal récapitulatif + PayPal
-  const { base, returnCost, total } = computePrice(type, km);
+  const hasFerry = detectFerry(dep, arr);
+  const { base, routeCost, ferryCost, total } = computePrice(type, km, hasFerry);
   const typeLabel = type === 'vl' ? 'Véhicule Léger' : 'PL / SPL';
-  const minApplied = (base + returnCost) < MIN_AMOUNT;
+  const minApplied = (base + routeCost + ferryCost) < MIN_AMOUNT;
 
-  currentQuote = { nom, email, type, dep, arr, km, base, returnCost, total, typeLabel, minApplied };
+  currentQuote = { nom, email, type, dep, arr, km, base, routeCost, ferryCost, total, typeLabel, minApplied, hasFerry };
 
   const summary = document.getElementById('modal-summary');
   summary.innerHTML = `
@@ -1307,7 +1345,8 @@ function submitDevis() {
     <div class="quote-line"><span>Type de véhicule</span><span>${typeLabel}</span></div>
     <div class="quote-line"><span>Distance</span><span>${km} km</span></div>
     <div class="quote-line"><span>Convoyage (${type === 'vl' ? '0,98' : '2,20'} €/km)</span><span>${base.toFixed(2)} €</span></div>
-    <div class="quote-line"><span>Retour transport (+24%)</span><span>+ ${returnCost.toFixed(2)} €</span></div>
+    <div class="quote-line"><span>Frais de route (28%)</span><span>+ ${routeCost.toFixed(2)} €</span></div>
+    ${hasFerry ? `<div class="quote-line" style="color:#60a5fa"><span>⛴ Frais divers — ferry (+20%)</span><span>+ ${ferryCost.toFixed(2)} €</span></div>` : ''}
     ${minApplied ? `<div class="quote-line" style="color:var(--accent)"><span>Min. facturation appliqué</span><span>—</span></div>` : ''}
     <div class="quote-line total"><span>Total TTC</span><span><span class="quote-total-num">${total.toFixed(2)} €</span></span></div>
   `;
