@@ -5,21 +5,99 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ProConvoi — Convoyage de Véhicules VL · PL · SPL partout en France</title>
 <meta name="description" content="Service professionnel de convoyage de véhicules VL, PL et SPL partout en France. Tarifs transparents, devis gratuit en ligne, paiement sécurisé. VL : 0,98€/km — PL/SPL : 2,20€/km.">
-<meta name="keywords" content="convoyage véhicule, convoyeur VL, convoyeur poids lourd, convoyeur SPL, convoyage France, conducteur SPL indépendant">
+<meta name="keywords" content="convoyage véhicule, convoyeur VL, convoyeur poids lourd, convoyeur SPL, convoyage France, conducteur SPL indépendant, convoyage voiture, transport véhicule France, convoyeur professionnel">
 <meta name="author" content="ProConvoi — Mickaël PLE">
 <meta name="robots" content="index, follow">
+<link rel="canonical" href="https://proconvoi-app.netlify.app">
 <!-- Open Graph -->
 <meta property="og:title" content="ProConvoi — Convoyage de Véhicules VL · PL · SPL">
 <meta property="og:description" content="Convoyage professionnel partout en France. VL à 0,98€/km, PL/SPL à 2,20€/km. Devis gratuit en ligne.">
 <meta property="og:url" content="https://proconvoi-app.netlify.app">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="fr_FR">
+<meta property="og:site_name" content="ProConvoi">
 <!-- Twitter Card -->
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="ProConvoi — Convoyage de Véhicules">
-<meta name="twitter:description" content="Convoyage VL · PL · SPL partout en France. Devis gratuit en ligne.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ProConvoi — Convoyage de Véhicules VL · PL · SPL">
+<meta name="twitter:description" content="Convoyage VL · PL · SPL partout en France. Devis gratuit en ligne. 0,98€/km">
 <!-- Favicon -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚛</text></svg>">
+<!-- Schema.org JSON-LD — données structurées pour Google -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "ProConvoi",
+  "description": "Service professionnel de convoyage de véhicules VL, PL et SPL partout en France",
+  "url": "https://proconvoi-app.netlify.app",
+  "telephone": "+33763082637",
+  "email": "mickaelple066@gmail.com",
+  "priceRange": "€€",
+  "currenciesAccepted": "EUR",
+  "paymentAccepted": "PayPal, Carte bancaire, Virement",
+  "areaServed": {
+    "@type": "Country",
+    "name": "France"
+  },
+  "serviceType": ["Convoyage véhicule léger", "Convoyage poids lourd", "Convoyage SPL", "Conducteur SPL indépendant"],
+  "founder": {
+    "@type": "Person",
+    "name": "Mickaël PLE"
+  },
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Services de convoyage",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Convoyage Véhicule Léger (VL)",
+          "description": "Convoyage de voitures, utilitaires, berlines, SUV partout en France"
+        },
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "price": "0.98",
+          "priceCurrency": "EUR",
+          "unitText": "km"
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Convoyage Poids Lourd / SPL",
+          "description": "Convoyage de camions, porteurs, semi-remorques partout en France"
+        },
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "price": "2.20",
+          "priceCurrency": "EUR",
+          "unitText": "km"
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Conducteur PL/SPL à la journée",
+          "description": "Mise à disposition d'un conducteur SPL qualifié pour missions ponctuelles ou régulières"
+        },
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "price": "340",
+          "priceCurrency": "EUR",
+          "unitText": "jour"
+        }
+      }
+    ]
+  },
+  "sameAs": [
+    "https://www.facebook.com/proconvoi",
+    "https://paypal.me/proconvoi"
+  ]
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -1112,7 +1190,7 @@
 </div>
 
 <!-- SDK Google Maps -->
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDpaInqXZ9SsybascVXomskEaep2g-8EfY&libraries=places&language=fr&callback=initMap" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA7Md92jgZ6znIuD0JARUx5hpSZEzrG-7U&libraries=places&language=fr&callback=initMap" async defer></script>
 
 <!-- NOTIFICATION -->
 <div class="notif" id="notif">
