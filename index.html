@@ -3,8 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ProConvoi — Convoyage de Véhicules VL · PL · SPL</title>
+<title>ProConvoi — Convoyage de Véhicules VL · PL · SPL partout en France</title>
+<meta name="description" content="Service professionnel de convoyage de véhicules VL, PL et SPL partout en France. Tarifs transparents, devis gratuit en ligne, paiement sécurisé. VL : 0,98€/km — PL/SPL : 2,20€/km.">
+<meta name="keywords" content="convoyage véhicule, convoyeur VL, convoyeur poids lourd, convoyeur SPL, convoyage France, conducteur SPL indépendant">
+<meta name="author" content="ProConvoi — Mickaël PLE">
+<meta name="robots" content="index, follow">
+<!-- Open Graph -->
+<meta property="og:title" content="ProConvoi — Convoyage de Véhicules VL · PL · SPL">
+<meta property="og:description" content="Convoyage professionnel partout en France. VL à 0,98€/km, PL/SPL à 2,20€/km. Devis gratuit en ligne.">
+<meta property="og:url" content="https://proconvoi-app.netlify.app">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_FR">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ProConvoi — Convoyage de Véhicules">
+<meta name="twitter:description" content="Convoyage VL · PL · SPL partout en France. Devis gratuit en ligne.">
+<!-- Favicon -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚛</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -54,6 +71,33 @@
     border-bottom: 1px solid var(--border);
   }
 
+  .hamburger {
+    display: none; flex-direction: column; gap: 5px;
+    background: none; border: none; cursor: pointer; padding: 4px;
+  }
+  .hamburger span {
+    display: block; width: 24px; height: 2px;
+    background: var(--white); border-radius: 2px;
+    transition: all .3s;
+  }
+  .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+  .hamburger.open span:nth-child(2) { opacity: 0; }
+  .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+  @media(max-width:768px) {
+    .hamburger { display: flex; }
+    .nav-links {
+      display: none; position: fixed;
+      top: 65px; left: 0; right: 0;
+      background: rgba(10,10,10,.97);
+      flex-direction: column; padding: 24px 5%;
+      gap: 20px; border-bottom: 1px solid var(--border);
+    }
+    .nav-links.open { display: flex; }
+    .nav-links a { font-size: 16px; }
+    nav .nav-cta { display: none; }
+  }
+
   .logo {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 28px;
@@ -63,8 +107,7 @@
   }
   .logo span { color: var(--white); }
 
-  .nav-links { display: flex; gap: 32px; list-style: none; }
-  .nav-links a {
+  .nav-links { display: flex; gap: 32px; list-style: none; }  .nav-links a {
     color: var(--muted); font-size: 14px; font-weight: 500;
     text-decoration: none; letter-spacing: .5px;
     transition: color .2s;
@@ -676,13 +719,17 @@
 <!-- NAV -->
 <nav>
   <a class="logo" href="#">PRO<span>CONVOI</span></a>
-  <ul class="nav-links">
-    <li><a href="#services">Services</a></li>
-    <li><a href="#tarifs">Tarifs</a></li>
-    <li><a href="#simulateur">Simulateur</a></li>
-    <li><a href="#faq">FAQ</a></li>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="#services" onclick="closeNav()">Services</a></li>
+    <li><a href="#tarifs" onclick="closeNav()">Tarifs</a></li>
+    <li><a href="#simulateur" onclick="closeNav()">Simulateur</a></li>
+    <li><a href="#faq" onclick="closeNav()">FAQ</a></li>
+    <li><a href="#devis" onclick="closeNav()" style="color:var(--accent);font-weight:600;">Devis</a></li>
   </ul>
   <a class="nav-cta" href="#devis">Demande de devis</a>
+  <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
 
 <!-- HERO -->
@@ -699,16 +746,16 @@
     </div>
     <div class="hero-stats">
       <div class="stat-item">
-        <div class="stat-num">500+</div>
-        <div class="stat-label">Convois réalisés</div>
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Couverture France entière</div>
       </div>
       <div class="stat-item">
         <div class="stat-num">48H</div>
         <div class="stat-label">Délai moyen d'intervention</div>
       </div>
       <div class="stat-item">
-        <div class="stat-num">100%</div>
-        <div class="stat-label">Couverture France entière</div>
+        <div class="stat-num">3</div>
+        <div class="stat-label">Types de véhicules</div>
       </div>
     </div>
   </div>
@@ -1140,6 +1187,16 @@ function calculateConducteur() {
   openModal();
 }
 
+// ── MENU HAMBURGER ──
+function toggleNav() {
+  document.getElementById('nav-links').classList.toggle('open');
+  document.getElementById('hamburger').classList.toggle('open');
+}
+function closeNav() {
+  document.getElementById('nav-links').classList.remove('open');
+  document.getElementById('hamburger').classList.remove('open');
+}
+
 // ── EMAIL VISIBLE ──
 (function() {
   const u = 'mickaelple066';
@@ -1284,7 +1341,7 @@ function calculate() {
 
 // ── FAQ ──
 const faqs = [
-  { q: "Comment est calculé le tarif de retour ?", a: "Le retour de notre convoyeur par transport en commun (train, bus, covoiturage) représente environ 30% du montant de convoyage et est directement inclus dans notre tarif. Il n'y a aucun frais supplémentaire à prévoir." },
+  { q: "Comment est calculé le tarif de retour ?", a: "Les frais de route (28% du montant de convoyage) couvrent le retour de notre convoyeur après la mission : carburant, péages, transport en commun ou covoiturage selon le trajet. Ces frais sont directement inclus dans notre tarif. Il n'y a aucun frais supplémentaire à prévoir." },
   { q: "Quel est le minimum de facturation ?", a: "Pour tout convoi, un minimum de 90 € est appliqué, quel que soit le type de véhicule. Cela couvre les frais fixes de préparation, assurance et déplacement." },
   { q: "Les convoyeurs sont-ils assurés ?", a: "Oui. Tous nos convoyeurs bénéficient d'une assurance responsabilité civile professionnelle. Un état des lieux photo est réalisé au départ et à l'arrivée." },
   { q: "Quels sont vos délais d'intervention ?", a: "En général, nous pouvons intervenir sous 24 à 48h ouvrés. Pour les convois urgents, contactez-nous directement par téléphone pour évaluer les disponibilités." },
